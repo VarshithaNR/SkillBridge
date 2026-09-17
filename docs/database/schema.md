@@ -64,6 +64,29 @@ per role.
 | complexity | Enum: `low` \| `medium` \| `high` | manual for now; AI-derived in a future phase |
 | timestamps | — | |
 
+### Problem
+`postedBy` references `User` directly (not a `BusinessProfile`) since that
+collection doesn't exist yet — see the note in `models/Problem.ts`.
+
+| Field | Type | Notes |
+|---|---|---|
+| title | String | required, max 150 |
+| description | String | required, max 5000 |
+| category | String | required, indexed |
+| requiredSkills | [String] | lowercased on write for consistent filtering |
+| budgetMin / budgetMax | Number | required; `budgetMax >= budgetMin` enforced |
+| deadline | Date | optional |
+| difficulty | Enum: `beginner` \| `intermediate` \| `advanced` | required, indexed |
+| locationType | Enum: `remote` \| `onsite` \| `hybrid` | default `remote`, indexed |
+| location | String | optional, meaningful for onsite/hybrid |
+| status | Enum: `open` \| `in_review` \| `assigned` \| `in_progress` \| `completed` \| `cancelled` | default `open`, indexed |
+| postedBy | ObjectId → User | required, indexed |
+| timestamps | — | |
+
+**Indexes:** a text index on `{ title, description }` powers the `search`
+query param; a compound `{ status, category, createdAt }` index supports the
+common "browse open problems in a category, newest first" query.
+
 ### Proposal
 | Field | Type | Notes |
 |---|---|---|

@@ -56,7 +56,12 @@ export interface LoginResult {
 }
 
 export async function loginUser(input: LoginInput): Promise<LoginResult> {
-  const user = await User.findOne({ email: input.email }).select('+passwordHash');
+  // `refreshTokens` has `select: false` on the schema, same as `passwordHash`.
+  // Both must be opted into explicitly here, or `user.refreshTokens` below is
+  // `undefined` and `.push()` throws (that's the exact bug this fixes).
+  const user = await User.findOne({ email: input.email }).select(
+    '+passwordHash +refreshTokens'
+  );
 
   // Same generic message whether the email doesn't exist or the password is
   // wrong — never reveal which one it was, that's an account-enumeration leak.

@@ -55,6 +55,32 @@ Reads and revokes the `refreshToken` cookie server-side, then clears it.
 Requires `Authorization: Bearer <accessToken>`. Returns the authenticated
 user's safe profile.
 
+### Problems
+```
+GET    /api/problems          (public — search/filter/paginate)
+GET    /api/problems/:id      (public)
+POST   /api/problems          (business only)
+PATCH  /api/problems/:id      (owner or admin only)
+DELETE /api/problems/:id      (owner or admin only)
+```
+
+**GET /api/problems**
+Query params (all optional): `page`, `limit` (max 50), `search` (matches
+title/description), `category`, `skill`, `difficulty`, `locationType`,
+`status` (defaults to `open` if omitted), `minBudget`, `maxBudget`. Returns
+`{ problems: Problem[], pagination: { page, limit, total, totalPages } }`.
+
+**POST /api/problems**
+Requires a `business`-role access token. Body: `{ title, description,
+category, requiredSkills, budgetMin, budgetMax, deadline?, difficulty,
+locationType, location? }`. `postedBy` is taken from the authenticated
+token — never accepted from the request body.
+
+**PATCH /api/problems/:id** / **DELETE /api/problems/:id**
+Requires the authenticated user to be the problem's owner or an admin;
+enforced in the service layer since it depends on the specific problem's
+data, not just the caller's role.
+
 ## Planned Endpoints (later phases, documented here for consistency)
 
 ### Developer Profiles
@@ -74,15 +100,6 @@ GET   /api/businesses/:id
 ### Skills
 ```
 GET /api/skills
-```
-
-### Problems
-```
-GET    /api/problems
-GET    /api/problems/:id
-POST   /api/problems           (business only)
-PATCH  /api/problems/:id       (owner only)
-DELETE /api/problems/:id       (owner only)
 ```
 
 ### Proposals
