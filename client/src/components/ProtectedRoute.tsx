@@ -31,7 +31,13 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
   }
 
   if (allowedRoles && !allowedRoles.includes(user.role)) {
-    return <Navigate to="/" replace />;
+    const ownDashboard =
+      user.role === 'developer'
+        ? '/developer/dashboard'
+        : user.role === 'business'
+          ? '/business/dashboard'
+          : '/admin/dashboard';
+    return <Navigate to={ownDashboard} replace />;
   }
 
   return <>{children}</>;

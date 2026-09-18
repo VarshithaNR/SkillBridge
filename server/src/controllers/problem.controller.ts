@@ -21,7 +21,7 @@ export const create = catchAsync(async (req: Request, res: Response) => {
 
 export const list = catchAsync(async (req: Request, res: Response) => {
   const query = listProblemsQuerySchema.parse(req.query);
-  const result = await problemService.listProblems(query);
+  const result = await problemService.listProblems(query, req.user);
 
   res.status(200).json({
     success: true,

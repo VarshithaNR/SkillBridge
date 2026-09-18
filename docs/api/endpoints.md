@@ -81,6 +81,46 @@ Requires the authenticated user to be the problem's owner or an admin;
 enforced in the service layer since it depends on the specific problem's
 data, not just the caller's role.
 
+## Phase 5 Endpoints
+
+### Proposals
+```
+POST  /api/problems/:problemId/proposals   (developer only)
+GET   /api/problems/:problemId/proposals   (problem owner or admin only)
+GET   /api/proposals/me                    (developer only — own proposals)
+GET   /api/proposals/:id                   (proposal's developer, problem owner, or admin)
+PATCH /api/proposals/:id/accept            (problem owner or admin only)
+PATCH /api/proposals/:id/reject            (problem owner or admin only)
+PATCH /api/proposals/:id/withdraw          (proposal's developer or admin only)
+```
+
+**POST /api/problems/:problemId/proposals**
+Requires a `developer`-role access token. Body: `{ coverLetter,
+proposedBudget, estimatedDuration? }`. `developer` is taken from the
+authenticated token, never the request body. Fails with `400` if the problem
+isn't `open`, `409` on a duplicate proposal from the same developer for the
+same problem (database-enforced via a unique `{ problem, developer }` index).
+
+**GET /api/problems/:problemId/proposals**
+Requires the caller to be the problem's owner or an admin — enforced in the
+service layer since it depends on data (who posted the problem), not just
+role. Same pagination/`status` query params as problem listing.
+
+**GET /api/proposals/me**
+Requires a `developer`-role access token. Returns the caller's own proposals,
+paginated, each with its parent problem populated.
+
+**PATCH /api/proposals/:id/accept**
+Only the problem's owner (or admin) may accept, and only while the proposal
+is `pending` and the problem is still `open`. On success: the proposal
+becomes `accepted`, the problem becomes `assigned`, and every other pending
+proposal on that problem is automatically `rejected` — a problem can only be
+assigned to one developer.
+
+**PATCH /api/proposals/:id/reject** / **PATCH /api/proposals/:id/withdraw**
+Reject is problem-owner/admin only; withdraw is the proposal's own developer
+(or admin) only. Both require the proposal to currently be `pending`.
+
 ## Planned Endpoints (later phases, documented here for consistency)
 
 ### Developer Profiles
@@ -100,13 +140,6 @@ GET   /api/businesses/:id
 ### Skills
 ```
 GET /api/skills
-```
-
-### Proposals
-```
-POST /api/problems/:id/proposals   (developer only)
-GET  /api/problems/:id/proposals   (business owner only)
-GET  /api/proposals/me             (developer's own proposals)
 ```
 
 Endpoints for projects, milestones, messaging, notifications, reviews,

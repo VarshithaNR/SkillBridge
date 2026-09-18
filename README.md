@@ -6,10 +6,10 @@ SkillBridge is an AI-powered marketplace connecting businesses with
 real-world software problems to developers, students, and freelancers who
 want real-world experience or paid project work.
 
-> **Status:** Phase 1 — Foundation. Auth, profiles, problems, and the rest
-> of the feature set are being built incrementally. See
-> [docs/architecture/overview.md](docs/architecture/overview.md) for what's
-> implemented so far.
+> **Status:** Phase 5 — Proposals. Auth, problems, and proposals are built;
+> profiles and the rest of the feature set are being built incrementally.
+> See [docs/architecture/overview.md](docs/architecture/overview.md) for
+> what's implemented so far.
 
 ## The Problem
 

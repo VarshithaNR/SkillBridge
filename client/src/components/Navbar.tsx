@@ -8,6 +8,13 @@ export default function Navbar() {
   const logoutMutation = useLogout();
   const navigate = useNavigate();
 
+  const dashboardPath =
+    user?.role === 'developer'
+      ? '/developer/dashboard'
+      : user?.role === 'business'
+        ? '/business/dashboard'
+        : '/admin/dashboard';
+
   const handleLogout = () => {
     logoutMutation.mutate(undefined, {
       onSuccess: () => navigate('/login'),
@@ -22,9 +29,21 @@ export default function Navbar() {
         </Link>
 
         <div className="flex items-center gap-4 text-sm">
+          {isInitialized && user && (
+            <Link to={dashboardPath} className="font-medium text-slate-700 hover:text-slate-900">
+              Dashboard
+            </Link>
+          )}
+
           <Link to="/problems" className="font-medium text-slate-700 hover:text-slate-900">
             Browse Problems
           </Link>
+
+          {isInitialized && user && (
+            <Link to="/projects" className="font-medium text-slate-700 hover:text-slate-900">
+              Projects
+            </Link>
+          )}
 
           {isInitialized && user?.role === 'business' && (
             <Link
@@ -32,6 +51,12 @@ export default function Navbar() {
               className="font-medium text-slate-700 hover:text-slate-900"
             >
               Post a Problem
+            </Link>
+          )}
+
+          {isInitialized && user?.role === 'developer' && (
+            <Link to="/proposals" className="font-medium text-slate-700 hover:text-slate-900">
+              My Proposals
             </Link>
           )}
 

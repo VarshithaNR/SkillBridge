@@ -73,6 +73,10 @@ export const listProblemsQuerySchema = z.object({
   status: statusEnum.optional(),
   minBudget: z.coerce.number().min(0).optional(),
   maxBudget: z.coerce.number().min(0).optional(),
+  // When true, scopes results to the authenticated business's own problems
+  // (all statuses, not just "open") — powers the business dashboard/My
+  // Problems view. Ignored for unauthenticated/non-business requests.
+  mine: z.coerce.boolean().optional(),
 });
 
 export type ListProblemsQuery = z.infer<typeof listProblemsQuerySchema>;

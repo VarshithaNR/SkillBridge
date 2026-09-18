@@ -1,4 +1,5 @@
 export type UserRole = 'developer' | 'business' | 'admin';
+export type ExperienceLevel = 'beginner' | 'intermediate' | 'advanced';
 
 /** Matches the SafeUser shape the backend returns (never includes passwordHash). */
 export interface User {
@@ -8,14 +9,37 @@ export interface User {
   role: UserRole;
   isVerified: boolean;
   createdAt: string;
+  skills?: string[];
+  experienceLevel?: ExperienceLevel;
+  bio?: string;
+  businessName?: string;
+  businessType?: string;
+  website?: string;
+  description?: string;
 }
 
-export interface RegisterPayload {
+export interface DeveloperRegisterPayload {
+  role: 'developer';
   name: string;
   email: string;
   password: string;
-  role: Exclude<UserRole, 'admin'>; // admin accounts aren't self-registered
+  skills: string[];
+  experienceLevel: ExperienceLevel;
+  bio?: string;
 }
+
+export interface BusinessRegisterPayload {
+  role: 'business';
+  name: string;
+  email: string;
+  password: string;
+  businessName: string;
+  businessType?: string;
+  website?: string;
+  description?: string;
+}
+
+export type RegisterPayload = DeveloperRegisterPayload | BusinessRegisterPayload;
 
 export interface LoginPayload {
   email: string;

@@ -59,6 +59,7 @@ export interface ProblemListQuery {
   status?: ProblemStatus;
   minBudget?: number;
   maxBudget?: number;
+  mine?: boolean;
 }
 
 export interface Pagination {

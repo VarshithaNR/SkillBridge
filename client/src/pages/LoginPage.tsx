@@ -21,7 +21,15 @@ export default function LoginPage() {
 
   const onSubmit = (values: LoginFormValues) => {
     loginMutation.mutate(values, {
-      onSuccess: () => navigate('/'),
+      onSuccess: (data) => {
+        const destination =
+          data.user.role === 'developer'
+            ? '/developer/dashboard'
+            : data.user.role === 'business'
+              ? '/business/dashboard'
+              : '/admin/dashboard';
+        navigate(destination, { replace: true });
+      },
     });
   };
 

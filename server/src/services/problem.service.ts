@@ -22,12 +22,21 @@ export async function createProblem(
   return Problem.create({ ...input, postedBy });
 }
 
-export async function listProblems(query: ListProblemsQuery): Promise<PaginatedResult<IProblem>> {
+export async function listProblems(
+  query: ListProblemsQuery,
+  actor?: { id: string; role: 'developer' | 'business' | 'admin' }
+): Promise<PaginatedResult<IProblem>> {
   const filter: FilterQuery<IProblem> = {};
 
-  // Public listing defaults to open problems only, unless a specific status
-  // is requested (e.g. a business viewing their own completed problems).
-  filter.status = query.status ?? 'open';
+  if (query.mine && actor && (actor.role === 'business' || actor.role === 'admin')) {
+    // Owner view: every status, scoped to their own problems.
+    filter.postedBy = actor.id;
+    if (query.status) filter.status = query.status;
+  } else {
+    // Public listing defaults to open problems only, unless a specific
+    // status is requested.
+    filter.status = query.status ?? 'open';
+  }
 
   if (query.category) filter.category = query.category;
   if (query.difficulty) filter.difficulty = query.difficulty;

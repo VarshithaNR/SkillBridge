@@ -1,11 +1,14 @@
 import { Schema, model, Document, Types } from 'mongoose';
 
 export type UserRole = 'developer' | 'business' | 'admin';
+export type ExperienceLevel = 'beginner' | 'intermediate' | 'advanced';
 
 /**
- * Auth + role only. Role-specific data (headline, skills, portfolio, company
- * info, etc.) lives in DeveloperProfile / BusinessProfile, built in a later
- * phase — this keeps User small and avoids unused fields per role.
+ * Auth + role, plus a small set of role-specific onboarding fields kept
+ * directly on User (skills/experience/bio for developers; company info for
+ * businesses) rather than in separate DeveloperProfile/BusinessProfile
+ * collections. Everything below is optional at the schema level since it
+ * only applies to one role — validated per-role in auth.validator.ts.
  */
 export interface IUser extends Document {
   _id: Types.ObjectId;
@@ -16,6 +19,18 @@ export interface IUser extends Document {
   isVerified: boolean;
   isActive: boolean;
   refreshTokens: string[];
+
+  // Developer-only onboarding fields
+  skills?: string[];
+  experienceLevel?: ExperienceLevel;
+  bio?: string;
+
+  // Business-only onboarding fields
+  businessName?: string;
+  businessType?: string;
+  website?: string;
+  description?: string;
+
   createdAt: Date;
   updatedAt: Date;
 }
@@ -57,6 +72,42 @@ const userSchema = new Schema<IUser>(
       type: [String],
       default: [],
       select: false, // hashed tokens; never returned by default either
+    },
+
+    skills: {
+      type: [String],
+      default: undefined,
+      set: (skills: string[]) => skills.map((s) => s.trim().toLowerCase()),
+    },
+    experienceLevel: {
+      type: String,
+      enum: ['beginner', 'intermediate', 'advanced'],
+    },
+    bio: {
+      type: String,
+      trim: true,
+      maxlength: 1000,
+    },
+
+    businessName: {
+      type: String,
+      trim: true,
+      maxlength: 150,
+    },
+    businessType: {
+      type: String,
+      trim: true,
+      maxlength: 100,
+    },
+    website: {
+      type: String,
+      trim: true,
+      maxlength: 200,
+    },
+    description: {
+      type: String,
+      trim: true,
+      maxlength: 1000,
     },
   },
   { timestamps: true }

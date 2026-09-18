@@ -101,7 +101,8 @@ clear message, rather than surfacing as a confusing runtime error later.
 
 ## Status
 
-This document reflects the **Phase 1 foundation**: project scaffolding, health
-check, and a small set of module directories. Auth, profiles, problems,
-proposals, and the rest of the module list will be documented here as they're
-implemented.
+This document reflects progress through **Phase 5**: project scaffolding,
+health check, auth (access/refresh JWTs), the problems module, and the
+proposals module (submit/list/accept/reject/withdraw). Profiles, projects,
+milestones, messaging, notifications, reviews, payments, and AI features
+will be documented here as each is implemented.

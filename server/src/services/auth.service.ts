@@ -13,6 +13,13 @@ export interface SafeUser {
   role: IUser['role'];
   isVerified: boolean;
   createdAt: Date;
+  skills?: string[];
+  experienceLevel?: IUser['experienceLevel'];
+  bio?: string;
+  businessName?: string;
+  businessType?: string;
+  website?: string;
+  description?: string;
 }
 
 /** Strips passwordHash/refreshTokens and shapes a User document for API responses. */
@@ -24,6 +31,13 @@ function toSafeUser(user: IUser): SafeUser {
     role: user.role,
     isVerified: user.isVerified,
     createdAt: user.createdAt,
+    skills: user.skills,
+    experienceLevel: user.experienceLevel,
+    bio: user.bio,
+    businessName: user.businessName,
+    businessType: user.businessType,
+    website: user.website,
+    description: user.description,
   };
 }
 
@@ -39,12 +53,27 @@ export async function registerUser(input: RegisterInput): Promise<SafeUser> {
 
   const passwordHash = await bcrypt.hash(input.password, SALT_ROUNDS);
 
-  const user = await User.create({
+  const baseFields = {
     name: input.name,
     email: input.email,
     passwordHash,
     role: input.role,
-  });
+  };
+
+  // Only the fields relevant to the chosen role are persisted — the
+  // discriminated-union validator already guarantees they're present/absent
+  // correctly, so no further branching on shape is needed here.
+  const roleFields =
+    input.role === 'developer'
+      ? { skills: input.skills, experienceLevel: input.experienceLevel, bio: input.bio }
+      : {
+          businessName: input.businessName,
+          businessType: input.businessType,
+          website: input.website,
+          description: input.description,
+        };
+
+  const user = await User.create({ ...baseFields, ...roleFields });
 
   return toSafeUser(user);
 }

@@ -88,18 +88,25 @@ query param; a compound `{ status, category, createdAt }` index supports the
 common "browse open problems in a category, newest first" query.
 
 ### Proposal
+`developer` references `User` directly (not `DeveloperProfile`), same
+reasoning as `Problem.postedBy` — that collection doesn't exist yet.
+
 | Field | Type | Notes |
 |---|---|---|
 | problem | ObjectId → Problem | required, indexed |
-| developer | ObjectId → DeveloperProfile | required, indexed |
-| coverLetter | String | required |
-| proposedBudget | Number | required |
-| estimatedDuration | String | |
-| status | Enum: `pending` \| `accepted` \| `rejected` \| `withdrawn` | default `pending` |
-| createdAt | — | |
+| developer | ObjectId → User | required, indexed |
+| coverLetter | String | required, max 3000 |
+| proposedBudget | Number | required, min 0 |
+| estimatedDuration | String | optional, max 60 |
+| status | Enum: `pending` \| `accepted` \| `rejected` \| `withdrawn` | default `pending`, indexed |
+| timestamps | — | `createdAt`, `updatedAt` |
 
 **Constraint:** compound unique index on `{ problem: 1, developer: 1 }` —
 one proposal per developer per problem, enforced at the database layer.
+
+**Side effects on accept:** accepting a proposal sets the parent `Problem`'s
+`status` to `assigned` and auto-rejects every other `pending` proposal on
+that problem, since a problem can only be assigned to one developer.
 
 ### Project
 | Field | Type | Notes |

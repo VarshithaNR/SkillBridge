@@ -1,6 +1,9 @@
 import { useState } from 'react';
+import { useSearchParams, Link } from 'react-router-dom';
+import { useAuthStore } from '../stores/authStore';
 import { useProblems } from '../hooks/useProblems';
 import ProblemCard from '../components/ProblemCard';
+import { EmptyState } from '../components/EmptyState';
 import { getErrorMessage } from '../utils/getErrorMessage';
 import type { ProblemDifficulty, ProblemListQuery, ProblemLocationType } from '../types/problem';
 
@@ -8,6 +11,11 @@ const DIFFICULTIES: ProblemDifficulty[] = ['beginner', 'intermediate', 'advanced
 const LOCATION_TYPES: ProblemLocationType[] = ['remote', 'onsite', 'hybrid'];
 
 export default function ProblemsPage() {
+  const [searchParams] = useSearchParams();
+  const mine = searchParams.get('mine') === 'true';
+  const user = useAuthStore((state) => state.user);
+  const isOwner = mine && user?.role === 'business';
+
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('');
   const [difficulty, setDifficulty] = useState<ProblemDifficulty | ''>('');
@@ -17,6 +25,7 @@ export default function ProblemsPage() {
   const query: ProblemListQuery = {
     page,
     limit: 9,
+    ...(isOwner && { mine: true }),
     ...(search && { search }),
     ...(category && { category }),
     ...(difficulty && { difficulty }),
@@ -32,8 +41,26 @@ export default function ProblemsPage() {
 
   return (
     <div className="mx-auto max-w-5xl px-6 py-10">
-      <h1 className="text-2xl font-bold text-slate-900">Problem Marketplace</h1>
-      <p className="mt-1 text-slate-600">Real problems, posted by real businesses.</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">
+            {isOwner ? 'My Problems' : 'Problem Marketplace'}
+          </h1>
+          <p className="mt-1 text-slate-600">
+            {isOwner
+              ? 'Every problem you have posted, across every status.'
+              : 'Real problems, posted by real businesses.'}
+          </p>
+        </div>
+        {isOwner && (
+          <Link
+            to="/problems/create"
+            className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+          >
+            + Post a Problem
+          </Link>
+        )}
+      </div>
 
       <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-4">
         <input
@@ -88,9 +115,24 @@ export default function ProblemsPage() {
         )}
 
         {data && data.problems.length === 0 && (
-          <div className="rounded-md border border-dashed border-slate-300 p-10 text-center text-slate-500">
-            No problems match your filters yet. Try broadening your search.
-          </div>
+          <EmptyState
+            title={isOwner ? 'No problems posted yet.' : 'No problems match your filters yet.'}
+            description={
+              isOwner
+                ? 'Post your first problem to start receiving proposals from developers.'
+                : 'Try broadening your search.'
+            }
+            action={
+              isOwner ? (
+                <Link
+                  to="/problems/create"
+                  className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+                >
+                  + Post a Problem
+                </Link>
+              ) : undefined
+            }
+          />
         )}
 
         {data && data.problems.length > 0 && (

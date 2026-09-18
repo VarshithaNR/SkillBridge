@@ -1,10 +1,35 @@
+import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useProblem } from '../hooks/useProblem';
+import { useMyProposals } from '../hooks/useMyProposals';
+import { useWithdrawProposal } from '../hooks/useWithdrawProposal';
+import ProposalForm from '../components/ProposalForm';
+import ProposalStatusBadge from '../components/ProposalStatusBadge';
+import { useAuthStore } from '../stores/authStore';
 import { getErrorMessage } from '../utils/getErrorMessage';
 
 export default function ProblemDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const { data, isLoading, isError, error } = useProblem(id);
+  const user = useAuthStore((state) => state.user);
+  const isDeveloper = user?.role === 'developer';
+  const [confirmingWithdraw, setConfirmingWithdraw] = useState(false);
+
+  // No dedicated "my proposal for this problem" endpoint exists, so this
+  // fetches the developer's proposals (with a generous limit) and matches
+  // client-side. Fine at this scale; would move server-side if a developer
+  // could realistically have hundreds of proposals.
+  const myProposalsQuery = useMyProposals({ limit: 100 }, isDeveloper);
+  const myProposal = myProposalsQuery.data?.proposals.find((p) => p.problem._id === id);
+
+  const withdrawMutation = useWithdrawProposal();
+
+  const handleWithdraw = () => {
+    if (!myProposal) return;
+    withdrawMutation.mutate(myProposal._id, {
+      onSuccess: () => setConfirmingWithdraw(false),
+    });
+  };
 
   if (isLoading) {
     return <p className="mx-auto max-w-3xl px-6 py-10 text-center text-slate-500">Loading…</p>;
@@ -90,6 +115,79 @@ export default function ProblemDetailsPage() {
                 </span>
               ))}
             </div>
+          </div>
+        )}
+
+        {user &&
+          (user.role === 'admin' ||
+            (user.role === 'business' && problem.postedBy._id === user.id)) && (
+            <div className="mt-6 border-t border-slate-100 pt-6">
+              <Link
+                to={`/problems/${problem._id}/proposals`}
+                className="inline-block rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+              >
+                View Proposals
+              </Link>
+            </div>
+          )}
+
+        {isDeveloper && (
+          <div className="mt-6 border-t border-slate-100 pt-6">
+            <h2 className="text-lg font-semibold text-slate-900">Proposal</h2>
+
+            {myProposalsQuery.isLoading ? (
+              <p className="mt-2 text-sm text-slate-500">Checking your proposal status…</p>
+            ) : myProposal ? (
+              <div className="mt-3 rounded-md border border-slate-200 bg-slate-50 p-4">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-medium text-slate-800">Proposal Submitted</p>
+                  <ProposalStatusBadge status={myProposal.status} />
+                </div>
+
+                {myProposal.status === 'pending' && (
+                  <div className="mt-3">
+                    {confirmingWithdraw ? (
+                      <div className="flex items-center gap-3">
+                        <span className="text-sm text-slate-600">Withdraw this proposal?</span>
+                        <button
+                          onClick={handleWithdraw}
+                          disabled={withdrawMutation.isPending}
+                          className="text-sm font-medium text-red-600 hover:underline disabled:opacity-50"
+                        >
+                          {withdrawMutation.isPending ? 'Withdrawing…' : 'Confirm'}
+                        </button>
+                        <button
+                          onClick={() => setConfirmingWithdraw(false)}
+                          className="text-sm font-medium text-slate-500 hover:underline"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setConfirmingWithdraw(true)}
+                        className="text-sm font-medium text-red-600 hover:underline"
+                      >
+                        Withdraw proposal
+                      </button>
+                    )}
+                    {withdrawMutation.isError && (
+                      <p className="mt-2 text-xs text-red-600">
+                        {getErrorMessage(withdrawMutation.error)}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+            ) : problem.status !== 'open' ? (
+              <p className="mt-2 text-sm text-slate-500">
+                This problem is no longer accepting proposals.
+              </p>
+            ) : (
+              <div className="mt-3">
+                <ProposalForm problemId={problem._id} />
+              </div>
+            )}
           </div>
         )}
       </div>
